@@ -29,6 +29,8 @@ app.use(express.urlencoded({ extended: true }));
 app.use(favicon(path.join(app.get('public'), 'favicon.ico')));
 // Host the public folder
 app.use('/', express.static(app.get('public')));
+app.use('/system/readiness', (req,res) => res.sendStatus(200))
+app.use('/system/liveliness', (req,res) => res.sendStatus(200))
 
 // Set up Plugins and providers
 app.configure(express.rest());
