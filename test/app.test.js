@@ -27,6 +27,22 @@ describe('Feathers application tests (with jest)', () => {
     );
   });
 
+  describe('system routes', () => {
+    it('/system/readiness should return 200', () => {
+      expect.assertions(1) 
+      return rp({
+        url: getUrl('/system/readiness')
+      }).then(res => expect(res).toEqual('OK'))
+    }) 
+
+    it('/system/liveliness should return 200', () => {
+      expect.assertions(1)
+      return rp({
+        url: getUrl('/system/liveliness')
+      }).then(res => expect(res).toEqual('OK'))
+    }) 
+  }) 
+
   describe('404', () => {
     it('shows a 404 HTML page', () => {
       expect.assertions(2);

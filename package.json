@@ -1,7 +1,7 @@
 {
   "name": "blackhole",
   "description": "Backend for Supernova",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "homepage": "",
   "main": "src",
   "keywords": [
@@ -23,11 +23,16 @@
     "yarn": ">= 0.18.0"
   },
   "scripts": {
+    "setupdb": "node tasks/createdb.js && yarn migrate up && node tasks/seeddb.js",
+    "dropdb": "node tasks/dropdb.js",
     "test": "yarn run eslint && NODE_ENV= yarn run jest",
     "eslint": "eslint src/. test/. --config .eslintrc.json",
     "dev": "nodemon src/",
     "start": "node src/",
-    "jest": "jest"
+    "jest": "jest",
+    "jest-watch": "jest --watch",
+    "migrate": "node-pg-migrate -m db/migrations",
+    "production": "NODE_ENV=production PORT=80 node src/"
   },
   "dependencies": {
     "@feathersjs/configuration": "^2.0.4",
@@ -38,7 +43,10 @@
     "compression": "^1.7.3",
     "cors": "^2.8.5",
     "helmet": "^3.15.0",
+    "node-pg-migrate": "^3.18.1",
+    "pg": "^7.9.0",
     "serve-favicon": "^2.5.0",
+    "swagger-jsdoc": "^3.2.8",
     "winston": "^3.0.0"
   },
   "devDependencies": {
