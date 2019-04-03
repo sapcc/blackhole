@@ -46,6 +46,7 @@
     "node-pg-migrate": "^3.18.1",
     "pg": "^7.9.0",
     "serve-favicon": "^2.5.0",
+    "sql": "^0.78.0",
     "swagger-jsdoc": "^3.2.8",
     "winston": "^3.0.0"
   },

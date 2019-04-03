@@ -207,7 +207,7 @@ class Service {
     }
     const client = await this.pool.connect()
     try {
-      const res = await client.query('INSERT INTO clients(name,permissions,status) VALUES($1,$2,$3) RETURNING *', [data.name,(data.permissions || ["read"]), 'active']) 
+      const res = await client.query('INSERT INTO clients(name,permissions,status) VALUES($1,$2,$3) RETURNING *', [data.name,(data.permissions || ['read']), 'active']) 
       client.release()
       return Promise.resolve(res.rows[0])
     } catch(e) {

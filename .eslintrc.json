@@ -8,6 +8,11 @@
     "ecmaVersion": 2017
   },
   "extends": "eslint:recommended",
+  "parserOptions":{
+    "ecmaFeatures": {
+      "experimentalObjectRestSpread": true
+    }
+  },
   "rules": {
     "indent": [
       "error",
@@ -20,10 +25,6 @@
     "quotes": [
       "error",
       "single"
-    ],
-    "semi": [
-      "error",
-      "always"
     ]
   }
 }

@@ -5,7 +5,7 @@ const crypto = require('crypto')
 
 const apiClientData = {api_key: 'valid_api_key', secret: 'secret' }
 
-describe("app hooks", () => {
+describe('app hooks', () => {
   let app
   let service
 
@@ -17,7 +17,7 @@ describe("app hooks", () => {
     })
 
     app.service('test').hooks(appHooks)
-    pgQueryMock(`SELECT * FROM clients WHERE api_key = 'valid_api_key'`, [apiClientData])
+    pgQueryMock('SELECT * FROM clients WHERE api_key = \'valid_api_key\'', [apiClientData])
     service = app.service('test')
   })
 

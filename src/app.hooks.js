@@ -49,7 +49,7 @@ const validateAuthToken = async  (context) => {
 
     delete context.params.apiClient
     delete context.params.query.apiClient
-    context.params.apiClient = {...apiClientData, secret: '' }
+    context.params.apiClient = { ...apiClientData, secret: '' }
 
   } catch(e) { return Promise.reject(new NotAuthenticated(e.message))}
 

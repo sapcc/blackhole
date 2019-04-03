@@ -20,7 +20,7 @@ describe('\'Clients\' service', () => {
     const token = createValidToken(apiClientData.api_key,apiClientData.secret)
     beforeEach(done => {
       pgQueryMock([
-        { query: `SELECT * FROM clients WHERE api_key = 'api_admin'`, result: [apiClientData] }
+        { query: 'SELECT * FROM clients WHERE api_key = \'api_admin\'', result: [apiClientData] }
       ])
       this.service = app.service('clients')
       done()
