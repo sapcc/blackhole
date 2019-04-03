@@ -6,13 +6,18 @@ const client = new Client({
   password: process.env.PGPASSWORD,
   host: process.env.PGHOST,
   port: process.env.PGPORT,
-  database: 'postgres'
+  database: process.env.PGDATABASE
 })
+
 client.connect()
 
-client.query(`DROP DATABASE IF EXISTS ${process.env.PGDATABASE}`, (err, res) => {
+client.query(`INSERT INTO clients(api_key,secret,name,permissions,status) VALUES('${process.env.ADMIN_API_KEY}','${process.env.ADMIN_API_SECRET}','Api Admin','{"api_admin"}','active') ON CONFLICT(api_key) DO UPDATE SET secret='${process.env.ADMIN_API_SECRET}'`, (err, res) => {
   if(err) {
-    console.error(err)
+    if(err.code === '42P04') {
+      console.info(err.message) 
+    } else {
+      console.log(err)
+    }
   }
   client.end()
 })

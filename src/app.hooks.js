@@ -10,11 +10,10 @@ const apiClients = {}
 
 const loadApiClientData = async (apiKey) => {
   if(apiClients.hasOwnProperty(apiKey)) return apiClients[apiKey]
-
   try {
     const pool = new Pool()
     const client = await pool.connect()
-    const res = await client.query({text: `SELECT * FROM clients WHERE api_key = '${apiKey}'`})
+    const res = await client.query({text: 'SELECT * FROM clients WHERE api_key = $1::text', values: [apiKey]})
     client.release()
     apiClients[apiKey] = res.rows[0]
     return apiClients[apiKey]
