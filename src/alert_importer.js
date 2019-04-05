@@ -2,6 +2,7 @@ require('dotenv').config()
 const { Pool } = require('pg')
 const sql = require('sql');
 const https = require('https')
+const moment = require('moment')
 
 const pool = new Pool()
 
@@ -22,15 +23,15 @@ const importData = async (data) => {
   let alerts = JSON.parse(data)
   const client = await pool.connect()
   try {
-    client.query('DELETE FROM alerts')
+    // client.query('DELETE FROM alerts')
     // prepare datafor insert
     const values = []
     alerts.forEach(alert => {
       if(!alert.fingerprint || !alert.startsAt) return
       values.push({
         'fingerprint': alert.fingerprint, 
-        'starts_at': alert.startsAt, 
-        'ends_at': alert.endsAt, 
+        'starts_at': moment(alert.startsAt), 
+        'ends_at': moment(alert.endsAt), 
         'label_names': Object.keys(alert.labels), 
         'label_values': Object.values(alert.labels),
         'inhibited_by': alert.status.inhibitedBy, 
@@ -74,3 +75,4 @@ const main = async () => {
 }
 
 main()
+setInterval(main,60*1000)

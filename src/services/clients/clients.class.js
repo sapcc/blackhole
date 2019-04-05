@@ -72,48 +72,19 @@ class Service {
    *   get:
    *     description: Retrieve a list of clients (**ONLY FOR API ADMIN**)
    *     summary: GET /clients
-   *     tags:
+   *     tags: 
    *       - clients
    *     produces:
    *       - application/json
-   *     parameters:
-   *       - in: query
-   *         name: 'name'
-   *         description: find by name   
-   *         schema:
-   *           type: string
-   *           example: '?name=test'
-   *       - in: query
-   *         name: api_key
-   *         description: find by api_key
-   *         schema:
-   *           type: string        
-   *           example: '?api_key=123456'
-   *       - in: query
-   *         name: permissionsIn
-   *         description: comma separeted list of permissions to retrieve corresponding clients
-   *         schema:
-   *           type: string        
-   *           example: '?permissionsIn=write,read'
-   *       - 
-   *         $ref: '#/components/parameters/page'
-   *       -
-   *         $ref: '#/components/parameters/per_page'
-   *
    *     responses: 
    *       200:
    *         description: Success
    *         content:
    *           application/json:
    *             schema:
-   *               type: object
-   *               properties:
-   *                 _metadata:
-   *                   $ref: '#/components/schemas/Metadata'
-   *                 clients:
-   *                   type: array
-   *                   items:
-   *                     $ref: '#/components/schemas/Client'
+   *               type: array
+   *               items:
+   *                 $ref: '#/components/schemas/Client'
    *       400:
    *         $ref: '#/components/responses/BadRequest'
    *       401:
@@ -140,7 +111,7 @@ class Service {
    *     description: Retrieve a specific client (**ONLY FOR API ADMIN**)
    *     summary: GET /clients/{id}
    *     tags:
-   *       - client
+   *       - clients
    *     produces:
    *       - application/json
    *     responses: 
@@ -177,8 +148,7 @@ class Service {
    *     description: Create a new client (**ONLY FOR API ADMIN**)
    *     summary: POST /clients
    *     tags:
-   *       - client
-   *       - create
+   *       - clients
    *     requestBody:
    *       required: true
    *       content:
@@ -222,8 +192,7 @@ class Service {
    *     description: Update a client (**ONLY FOR API ADMIN**)
    *     summary: PUT /clients/{id} 
    *     tags:
-   *       - client
-   *       - update
+   *       - clients
    *     requestBody:
    *       required: true
    *       content:
@@ -273,9 +242,7 @@ class Service {
    *     description: Remove a client (**ONLY FOR API ADMIN**)
    *     summary: DELETE /clients/{id}
    *     tags:
-   *       - client
-   *       - delete
-   *       - remove
+   *       - clients
    *     produces:
    *       - application/json
    *     responses: 

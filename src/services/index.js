@@ -29,16 +29,18 @@
  *       name: page
  *       schema:
  *         type: integer
+ *         default: 1
+ *         minimum: 1
  *         example: '?page=2'
  *     per_page:
  *       in: query
  *       name: per_page
  *       schema:
  *         type: integer
- *         maximum: 500
+ *         maximum: 1000
  *         minimum: 1
- *         default: 50
- *         example: '?per_page=20'
+ *         default: 1000
+ *         example: '?per_page=100'
  *       
  *   responses:
  *     Unauthorized:
