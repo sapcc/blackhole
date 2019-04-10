@@ -2,7 +2,7 @@ IMAGE := sapcc/blackhole
 TEST-IMAGE := hub.global.cloud.sap/monsoon/nodebuild
 DATE     := $(shell date +%Y%m%d%H%M%S)
 VERSION  ?= v$(DATE)
-UNIT-VERSION := 8.12
+UNIT-VERSION := 11.12
 BUILD_ARGS = --build-arg VERSION=$(VERSION)
 
 .PHONY: build, start, unit-test, integration-test, font-awesome-file, build-test, push-test
