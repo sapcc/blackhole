@@ -1,3 +1,5 @@
+/*eslint no-console: ["error", { allow: ["info","warn", "error"] }] */
+
 require('dotenv').config()
 const { Pool } = require('pg')
 const sql = require('sql');
@@ -7,7 +9,7 @@ const moment = require('moment')
 const pool = new Pool()
 
 const loadData = async (url) => {
-  return new Promise((resolve,reject) => {
+  return new Promise((resolve) => {
     https.get(url, res => {
       res.setEncoding('utf8')
       let body = ''
@@ -29,13 +31,13 @@ const importData = async (data) => {
     alerts.forEach(alert => {
       if(!alert.fingerprint || !alert.startsAt) return
       values.push({
-        'fingerprint': alert.fingerprint, 
-        'starts_at': moment(alert.startsAt), 
-        'ends_at': moment(alert.endsAt), 
-        'label_names': Object.keys(alert.labels), 
+        'fingerprint': alert.fingerprint,
+        'starts_at': moment(alert.startsAt),
+        'ends_at': moment(alert.endsAt),
+        'label_names': Object.keys(alert.labels),
         'label_values': Object.values(alert.labels),
-        'inhibited_by': alert.status.inhibitedBy, 
-        'silenced_by': alert.status.silencedBy, 
+        'inhibited_by': alert.status.inhibitedBy,
+        'silenced_by': alert.status.silencedBy,
         'state': alert.status.state,
         'payload': alert
       })
@@ -49,13 +51,13 @@ const importData = async (data) => {
     let query = Alert.insert(values).toQuery();
     query.text = query.text + ' ON CONFLICT (fingerprint,starts_at) DO UPDATE SET ends_at = excluded.ends_at, inhibited_by = excluded.inhibited_by, silenced_by = excluded.silenced_by, state = excluded.state, payload = excluded.payload'
 
-    //  console.log(query.text) 
+    //  console.log(query.text)
     const res = await client.query(query)
     //console.log(res.rowCount)
     client.release()
     //console.log('released')
     return Promise.resolve(res.rowCount)
-  } catch(e) { 
+  } catch(e) {
     return Promise.reject(e.message) //console.error(e.stack)
   }
 }
@@ -68,7 +70,7 @@ const main = async () => {
     //console.log(data)
 
     const rowCount = await importData(data)
-    console.log(rowCount, 'alerts inserted in', (Date.now()-time), 'ms')
+    console.info(rowCount, 'alerts inserted in', (Date.now()-time), 'ms')
   } catch(e) {
     console.error(e)
   }

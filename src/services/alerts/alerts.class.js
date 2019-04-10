@@ -1,31 +1,31 @@
-/* eslint-disable no-unused-vars */
+/*eslint no-console: ["error", { allow: ["info","warn", "error"] }] */
 const moment = require('moment')
 const { Pool } = require('pg')
 
 /**
  * @swagger
- *     
+ *
  * components:
  *   schemas:
  *     Alert:
  *       type: object
  *       properties:
- *         annotations: 
+ *         annotations:
  *           type: string
  *           format: date-time
- *         startsAt: 
+ *         startsAt:
  *           type: string
  *           format: date-time
  *         endsAt:
  *           type: timestamp
- *         labels: 
+ *         labels:
  *           type: object
  *         generatorURL:
  *           type: string
  *         status:
  *           type: object
  *           description: a valid **JSON** string
- *         receivers: 
+ *         receivers:
  *           type: array
  *         fingerprint:
  *           type: string
@@ -75,9 +75,9 @@ class Service {
    *         name: ANY LABEL
    *         description: filter by label. Multiple label filters are combined by AND
    *         schema:
-   *           type: string        
+   *           type: string
    *           example: '?alertname=Test&region=eu-de-1'
-   *       - 
+   *       -
    *         $ref: '#/components/parameters/page'
    *       -
    *         $ref: '#/components/parameters/per_page'
@@ -88,7 +88,7 @@ class Service {
    *           default: true
    *           example: '?include_metadata=true'
    *
-   *     responses: 
+   *     responses:
    *       200:
    *         description: Success
    *         content:
@@ -104,16 +104,16 @@ class Service {
    *                     $ref: '#/components/schemas/Alert'
    *
    *         headers:
-   *           Link: 
+   *           Link:
    *             description: pagination links
    *             schema:
    *               type: string
-   *               example: 
+   *               example:
    *                 '<https://blackhole-api.cloud.sap/alerts?per_page=20&page=5>; rel="next",
-   *                  <https://blackhole-api.cloud.sap/alerts?per_page=20&page=10>; rel="last", 
+   *                  <https://blackhole-api.cloud.sap/alerts?per_page=20&page=10>; rel="last",
    *                  <https://blackhole-api.cloud.sap/alerts?per_page=20&page=1>; rel="first",
    *                  <https://blackhole-api.cloud.sap/alerts?per_page=20&page=4>; rel="prev"'
-   *                        
+   *
    *       400:
    *         $ref: '#/components/responses/BadRequest'
    *       401:
@@ -122,7 +122,7 @@ class Service {
    *         $ref: '#/components/responses/UnexpectedError'
    */
   async find (params) {
-    console.log(params.query)
+    console.info(params.query)
     let {include_metadata,per_page,page,date_start,date_end, ...labels} = params.query
 
     if(!per_page || per_page > 1000) per_page = 1000
@@ -130,7 +130,7 @@ class Service {
     if(!page || page <= 0) page = 1
 
     const offset = (page-1) * per_page
-    const includeMetadata = include_metadata !== 'false'  
+    const includeMetadata = include_metadata !== 'false'
     const dateStart = date_start && moment(date_start)
     const dateEnd = date_end && moment(date_end)
 
@@ -140,13 +140,13 @@ class Service {
       let query = {text: 'SELECT * FROM alerts', values: []}
 
       // add time range constrains
-      if(dateStart && !dateEnd) {        
-        query.text += ' WHERE starts_at >= $1' 
+      if(dateStart && !dateEnd) {
+        query.text += ' WHERE starts_at >= $1'
         query.values = [dateStart]
-      } else if(!dateStart && dateEnd) {        
+      } else if(!dateStart && dateEnd) {
         query.text += ' WHERE ends_at <= $1'
         query.value = [dateEnd]
-      } else if (dateStart && dateEnd) {        
+      } else if (dateStart && dateEnd) {
         query.text += ' WHERE starts_at >= $1 AND ends_at <= $2'
         query.values = [dateStart, dateEnd]
       } else {
@@ -155,7 +155,7 @@ class Service {
 
       // add labels filter
       if(labels) {
-        Object.keys(labels).forEach((label,index) => {
+        Object.keys(labels).forEach((label) => {
           query.text += ` AND payload -> 'labels' ->> $${query.values.length+1} = $${query.values.length+2} `
           query.values.push(label,labels[label])
         })
@@ -186,7 +186,7 @@ class Service {
             page_count: Math.ceil(total/per_page),
             total_count: total,
             links: [
-              
+
             ]
           },
           alerts
@@ -194,12 +194,12 @@ class Service {
       } else {
         return alerts
       }
-    } catch(e) { 
+    } catch(e) {
       return Promise.reject(e) //console.error(e.stack)
     }
   }
 
-  async get (id, params) {
+  async get (id/*, params*/) {
     return {
       id, text: `A new message with ID: ${id}!`
     };
@@ -213,15 +213,15 @@ class Service {
     return data;
   }
 
-  async update (id, data, params) {
+  async update (id, data/*, params*/) {
     return data;
   }
 
-  async patch (id, data, params) {
+  async patch (id, data/*, params*/) {
     return data;
   }
 
-  async remove (id, params) {
+  async remove (id/*, params*/) {
     return { id };
   }
 }
