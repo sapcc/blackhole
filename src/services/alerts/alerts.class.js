@@ -1,6 +1,7 @@
 /* eslint-disable no-unused-vars */
 const moment = require('moment')
 const { Pool } = require('pg')
+const importAlerts = require('../../importers/alerts')
 
 /**
  * @swagger
@@ -43,7 +44,14 @@ const { Pool } = require('pg')
 class Service {
   constructor (options) {
     this.pool = new Pool()
-    this.options = options || {};
+    this.options = options || {}
+    this.events = ['changes']
+  }
+
+  setup (app,path) {
+    console.log(':::::::::::::::SETUP ALERTS SERVICE::::::::::::::::::::',path)
+    importAlerts().catch(error => console.log('error',error))
+    setInterval(importAlerts,60*1000)
   }
 
   /**

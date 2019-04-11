@@ -15,7 +15,7 @@ const socketio = require('@feathersjs/socketio');
 const middleware = require('./middleware');
 const services = require('./services');
 const appHooks = require('./app.hooks');
-const channels = require('./channels');
+//const channels = require('./channels');
 
 // Load swagger definitions.
 // We are using jsdoc to define swagger definitions inside js files.
@@ -49,7 +49,14 @@ app.use('/docs.json', (req, res) => {
 
 // Set up Plugins and providers
 app.configure(express.rest());
-app.configure(socketio());
+
+// provide authToken to services on websockets
+app.configure(socketio(io => {
+  io.use((socket,next) => {
+    socket.feathers.authToken = socket.handshake.query.authToken
+    next()
+  })
+}))
 
 // Configure other middleware (see `middleware/index.js`)
 app.configure(middleware);
@@ -62,7 +69,7 @@ app.use((req, res, next) => {
 // Set up our services (see `services/index.js`)
 app.configure(services);
 // Set up event channels (see channels.js)
-app.configure(channels);
+//app.configure(channels);
 
 // Configure a middleware for 404s and the error handler
 app.use(express.notFound());
