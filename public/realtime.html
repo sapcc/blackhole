@@ -8,8 +8,11 @@
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jsSHA/2.3.1/sha256.js"></script>
     <script src="http://10.47.43.182:3030/socket.io/socket.io.js"></script>
 
+    <script src="https://unpkg.com/react@16/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@16/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+ 
     <script>
-
       const token = () => {
         const timestamp = Math.floor(Date.now()/1000+4000)
         
@@ -19,35 +22,115 @@
         var hmac = shaObj.getHMAC("B64");
         return `admin.${hmac}.${timestamp}`     
       }
+      //annotations: {summary: "A Kubelet is DOWN", description: "Kublet on s-ap-ae-1-payload-4vmr4 is DOWN."}
+      //endsAt: "2019-04-12T13:36:39.412Z"
+      //fingerprint: "003a9e20b50f8923"
+      //generatorURL: "https://prometheus-scaleout.ap-ae-1.cloud.sap/graph?g0.expr=up%7Bjob%3D%22kube-system%2Fkubelet%22%7D+%3D%3D+0&g0.tab=1"
+      //labels: {job: "kube-system/kubelet", meta: "s-ap-ae-1-payload-4vmr4", tier: "k8s", region: "ap-ae-1", cluster: "s-ap-ae-1", …}
+      //receivers: [{…}]
+      //startsAt: "2019-04-05T12:31:39.412Z"
+      //status: {state: "suppressed", silencedBy: null, inhibitedBy: Array(1)}
+      //updatedAt: "0001-01-01T00:00:00.000Z"
 
-      var socket = io('http://10.47.43.182:3030/',{query: {authToken: token()} });
-      socket.on('error', (error) => {
-        console.log('ERROR:::::::::::::::::',error)
-      })  
+    </script>  
+    <style>
+      .info {
+        color: blue;
+      }
+      .critical {
+        color: red;
+      }
+      .warning {
+        color: orange;
+      }
 
-      //socket.io.opts.query = {authToken: 'admin.ew4hJWq9iaPLceOHHUym9A3grIXxNYv8oTklIscbNRI=.1554799778'}
-      socket.on('disconnect', () => console.log('disconnected'))
-      socket.on('connect', () => console.log('connected'))
-
-      //socket.options.query = {authToken: 'admin.oy4LcA6132F1ajlv6jBOwmqBcz8xBg7D9O4JWkFSNVw=.1554734107'}
-      //socket.connect()
-
-      socket.on('find alerts',(err,data) => console.log('error:',err,data))
-
-      socket.emit('find','alerts',{},(error,data) => {
-        console.log(':::::::',error, data)
-        document.body.innerHTML += `<ul>${data['alerts'].map(a => `<li>${a.annotations.summary} ${a.endsAt}</li>`).join('')}</ul>`
-      })
-      //socket.emit('authenticate', {
-      //  strategy: 'test'
-      //}, function(message, data) {
-      //  console.log(message); // message will be null
-      //  console.log(data); // data will be {"accessToken": "your token"}
-      //  // You can now send authenticated messages to the server
-      //});
-    </script>
+    </style>
   </head>
   <body>
-    Realtime Test
+
+    <div id="content"></div>
+
+    <script type="text/babel">
+
+      const App = (props) => {
+        const [initialized,SetInitialized] = React.useState(false)
+        const [alerts, setAlerts] = React.useState([])
+
+        React.useEffect(() => {
+          const socket = io('http://10.47.43.182:3030/',{query: {authToken: token()} })
+
+          socket.on('disconnect', () => console.log('Socket closed!'))
+          socket.on('connect', () => console.log('Socket opened!'))
+            
+          socket.emit('find','alerts',{}, (error,data) => {
+            if(data) setAlerts(data.alerts)
+            console.log(alerts)
+
+            socket.on('alerts changes', changes => {
+              setAlerts(alerts => {
+                let newAlerts = alerts.slice()
+                console.log("::::::::::::::::::::",alerts,newAlerts)
+                if(changes.updated) {
+                  changes.updated.forEach(updatedAlert => {
+                    const index = newAlerts.findIndex(alert => alert.fingerprint === updatedAlert.fingerprint)
+                    if(index => 0) newAlerts[index] = {...updatedAlert}
+                  })
+                }
+                if(changes.added) {
+                  changes.added.forEach(alert => newAlerts.unshift(alert))
+                }
+                if(changes.deleted) {
+                  const fingerprints = changes.deleted.map(deletedAlert => deletedAlert.fingerprint)
+                  newAlerts = newAlerts.filter(fingerprints.indexOf(alert.fingerprint)<0)
+                }
+                console.log('added',changes.added.length, 'updated', changes.updated.length)
+                newAlerts = newAlerts.filter((item,index) => newAlerts.indexOf(item) === index)
+                console.log(newAlerts)
+                return newAlerts
+              })
+            })
+          })
+
+          return () => {
+            socket.disconnect()
+          }
+        }, [])  
+
+        return (
+          <table width="100%">
+            <thead>
+              <tr>
+                <th>
+                  Summary        
+                </th>
+                <th>
+                  Starts At
+                </th>
+                <th>
+                  Ends At
+                </th>
+                <th>
+                  Status
+                </th>
+              </tr>  
+            </thead>
+            <tbody>
+              {alerts.map((alert,index) =>
+                <tr key={index} className={alert.labels.severity}>
+                  <td>{alert.annotations.summary}</td>
+                  <td>{alert.startsAt}</td>
+                  <td>{alert.endsAt}</td>
+                  <td>{JSON.stringify(alert.status)}</td>
+                </tr>
+              )}
+            </tbody> 
+          </table>  
+        )
+      }
+
+      const domContainer = document.querySelector('#content')
+      ReactDOM.render(React.createElement(App), domContainer)
+      
+    </script>
   </body>
 </html>

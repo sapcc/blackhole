@@ -48,10 +48,19 @@ class Service {
     this.events = ['changes']
   }
 
-  setup (app,path) {
-    console.log(':::::::::::::::SETUP ALERTS SERVICE::::::::::::::::::::',path)
-    importAlerts().catch(error => console.log('error',error))
-    setInterval(importAlerts,60*1000)
+  setup (){ //(app,path) {
+    this.startImporter(60)
+  }
+
+  async startImporter(intervalInSec = 60) {
+    const start = Date.now()
+    const changes = await importAlerts()
+    this.emit('changes', changes)
+
+    let timeout = start + (intervalInSec*1000) - Date.now()
+    if(timeout<0) timeout = 0
+    console.info('next update in ', timeout/1000, 'seconds')
+    setTimeout(() => this.startImporter(intervalInSec), timeout)
   }
 
   /**
@@ -130,7 +139,6 @@ class Service {
    *         $ref: '#/components/responses/UnexpectedError'
    */
   async find (params) {
-    console.info(params.query)
     let {include_metadata,per_page,page,date_start,date_end, ...labels} = params.query
 
     if(!per_page || per_page > 1000) per_page = 1000
@@ -178,7 +186,6 @@ class Service {
       // Load alerts
       const res = await client.query(query)
       const alerts = res.rows.map(row => row.payload)
-
       // release client back to the pool
       client.release()
 

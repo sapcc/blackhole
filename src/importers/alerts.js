@@ -1,3 +1,5 @@
+/*eslint no-console: ["error", { allow: ["info","warn", "error"] }] */
+
 require('dotenv').config()
 const https = require('https')
 const { Pool } = require('pg')
@@ -25,7 +27,6 @@ const loadData = async (url) => {
 const prepareData = async (data) => {
   let alerts = JSON.parse(data)
   try {
-    // client.query('DELETE FROM alerts')
     // prepare datafor insert
     const values = []
     alerts.forEach(alert => {
@@ -34,7 +35,6 @@ const prepareData = async (data) => {
       contentHash.update(JSON.stringify(alert))
 
       values.push({
-        'content_hash': contentHash.digest('hex'),
         'fingerprint': alert.fingerprint, 
         'starts_at': moment(alert.startsAt), 
         'ends_at': moment(alert.endsAt), 
@@ -50,7 +50,7 @@ const prepareData = async (data) => {
     //console.log('released')
     return Promise.resolve(values)
     } catch(e) { 
-      console.log(e)
+      console.error(e)
     return Promise.reject(e) //console.error(e.stack)
   }
 }
@@ -60,26 +60,41 @@ const doImport = async (alerts) => {
 
   let Alert = sql.define({
     name: 'alerts',
-    columns: ['content_hash','fingerprint','starts_at','ends_at','label_names','label_values',
+    columns: ['fingerprint','starts_at','ends_at','created_at','updated_at','label_names','label_values',
               'inhibited_by','silenced_by','state','payload']
   })
 
 
   let query = Alert.insert(alerts).toQuery()
-  query.text += ' ON CONFLICT(fingerprint,starts_at) DO NOTHING RETURNING *'
-  //console.log('::::::::::::',query.text)
-
+  // add ON CONFLICT to the queryy. 
+  // This query inserts or updates alerts based on fingerprint, created_at and a content hash of payload.
+  query.text += ' ON CONFLICT(fingerprint,starts_at) DO UPDATE SET ends_at = excluded.ends_at, inhibited_by = excluded.inhibited_by, silenced_by = excluded.silenced_by, state = excluded.state, payload = excluded.payload, updated_at = NOW() WHERE MD5(alerts.payload::TEXT) != MD5(excluded.payload::TEXT) RETURNING *'
+  
+  const now = new Date() 
   const res = await client.query(query)
-  console.log(res.rowCount)
+
+  //client.query('SELECT COUNT(*) FROM alerts').then(res => console.info(res.rows[0].count))
+  // IMPORTANT!!!
+  client.release()
+
+  // sort modified alerts to added and updated based on created date
+  const result = { added: [], updated: [] }
+  res.rows.forEach( alert => {
+    // console.log(alert.created_at,now)
+    alert.created_at >= now ? result.added.push(alert.payload) : result.updated.push(alert.payload)
+  })
+
+  return Promise.resolve(result)
 }
 
 module.exports = async () => {
-  console.log(':::IMPORT ALERTS:::')
+  console.info(':::IMPORT ALERTS:::')
   
   const time = Date.now()
   const data = await loadData(process.env.ALERTS_API_ENDPOINT)
   const alerts = await prepareData(data)
-  await doImport(alerts)
+  const changes = await doImport(alerts)
  
-  console.log(alerts.length, 'alerts imported in', (Date.now()-time), 'ms') 
+  console.info(alerts.length, 'alerts procceded in', (Date.now()-time), 'ms. ', 'added:',changes.added.length, 'updated:', changes.updated.length) 
+  return changes
 }
