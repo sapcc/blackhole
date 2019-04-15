@@ -24,12 +24,14 @@ const loadApiClientData = async (apiKey) => {
 
 const validateAuthToken = async  (context) => {
   try {
-    if(!context.params.authToken) {
+    console.log(':::::::::::::::::',context.params)
+    const authToken = context.params.authToken
+    if(!authToken) {
       return Promise.reject(
         new NotAuthenticated('Missing auth token. Please check the presence of auth token')
       )
     }
-    const [apiKey,signature,timestamp] = context.params.authToken.split('.')
+    const [apiKey,signature,timestamp] = authToken.split('.')
     if(!apiKey || !signature || !timestamp) {
       return Promise.reject(new NotAuthenticated('Invalid token. Please check the syntax of auth token'))
     }
@@ -46,13 +48,27 @@ const validateAuthToken = async  (context) => {
 
     const refSignature  = crypto.createHmac('sha256', apiClientData.secret).update(timestamp).digest('base64')
     if(signature!=refSignature) return Promise.reject(new NotAuthenticated('Bad Signature'))
-
     delete context.params.apiClient
     delete context.params.query.apiClient
     context.params.apiClient = { ...apiClientData, secret: '' }
+  } catch(e) { return Promise.reject(new NotAuthenticated(e))}
 
-  } catch(e) { return Promise.reject(new NotAuthenticated(e.message))}
+}
 
+const enforceReadPermission = (context) => {
+  if((context.params.apiClient.permissions.includes('api_admin') || 
+      context.params.apiClient.permissions.includes('read')) && 
+      context.params.apiClient.status === 'active') return 
+
+  return Promise.reject(new NotAuthenticated('Not Authorized'))
+}
+
+const enforceWritePermission = (context) => {
+  if((context.params.apiClient.permissions.includes('api_admin') ||
+    context.params.apiClient.permissions.includes('write')) && 
+    context.params.apiClient.status === 'active') return
+
+  return Promise.reject(new NotAuthenticated('Not Authorized'))
 }
 
 module.exports = {
@@ -61,12 +77,12 @@ module.exports = {
       log(),
       validateAuthToken
     ],
-    find: [],
-    get: [],
-    create: [],
-    update: [],
-    patch: [],
-    remove: []
+    find: [enforceReadPermission],
+    get: [enforceReadPermission],
+    create: [enforceWritePermission],
+    update: [enforceWritePermission],
+    patch: [enforceWritePermission],
+    remove: [enforceWritePermission]
   },
 
   after: {

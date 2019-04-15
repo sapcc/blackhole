@@ -49,7 +49,14 @@ app.use('/docs.json', (req, res) => {
 
 // Set up Plugins and providers
 app.configure(express.rest());
-app.configure(socketio());
+
+// provide authToken to services on websockets
+app.configure(socketio(io => {
+  io.use((socket,next) => {
+    socket.feathers.authToken = socket.handshake.query.authToken
+    next()
+  })
+}))
 
 // Configure other middleware (see `middleware/index.js`)
 app.configure(middleware);

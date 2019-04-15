@@ -1,6 +1,7 @@
 /*eslint no-console: ["error", { allow: ["info","warn", "error"] }] */
 const moment = require('moment')
 const { Pool } = require('pg')
+const importAlerts = require('../../importers/alerts')
 
 /**
  * @swagger
@@ -43,7 +44,23 @@ const { Pool } = require('pg')
 class Service {
   constructor (options) {
     this.pool = new Pool()
-    this.options = options || {};
+    this.options = options || {}
+    this.events = ['changes']
+  }
+
+  setup (){ //(app,path) {
+    this.startImporter(60)
+  }
+
+  async startImporter(intervalInSec = 60) {
+    const start = Date.now()
+    const changes = await importAlerts()
+    this.emit('changes', changes)
+
+    let timeout = start + (intervalInSec*1000) - Date.now()
+    if(timeout<0) timeout = 0
+    console.info('next update in ', timeout/1000, 'seconds')
+    setTimeout(() => this.startImporter(intervalInSec), timeout)
   }
 
   /**
@@ -122,7 +139,6 @@ class Service {
    *         $ref: '#/components/responses/UnexpectedError'
    */
   async find (params) {
-    console.info(params.query)
     let {include_metadata,per_page,page,date_start,date_end, ...labels} = params.query
 
     if(!per_page || per_page > 1000) per_page = 1000
@@ -170,7 +186,6 @@ class Service {
       // Load alerts
       const res = await client.query(query)
       const alerts = res.rows.map(row => row.payload)
-
       // release client back to the pool
       client.release()
 
