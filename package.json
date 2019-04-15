@@ -25,7 +25,7 @@
   "scripts": {
     "setupdb": "node tasks/createdb.js && yarn migrate up && node tasks/seeddb.js",
     "dropdb": "node tasks/dropdb.js",
-    "test": "yarn run eslint && NODE_ENV= yarn run jest",
+    "test": "yarn run eslint && NODE_ENV=test yarn run jest",
     "eslint": "eslint src/. test/. --config .eslintrc.json",
     "dev": "nodemon src/",
     "start": "node src/",
