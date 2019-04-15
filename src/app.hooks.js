@@ -24,7 +24,6 @@ const loadApiClientData = async (apiKey) => {
 
 const validateAuthToken = async  (context) => {
   try {
-    console.log(':::::::::::::::::',context.params)
     const authToken = context.params.authToken
     if(!authToken) {
       return Promise.reject(
