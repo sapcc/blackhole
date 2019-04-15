@@ -11,7 +11,7 @@ const pool = new Pool()
 
 // load Data from api
 const loadData = async (url) => {
-  return new Promise((resolve,reject) => {
+  return new Promise((resolve) => {
     https.get(url, res => {
       res.setEncoding('utf8')
       let body = ''
@@ -49,8 +49,8 @@ const prepareData = async (data) => {
 
     //console.log('released')
     return Promise.resolve(values)
-    } catch(e) { 
-      console.error(e)
+  } catch(e) { 
+    console.error(e)
     return Promise.reject(e) //console.error(e.stack)
   }
 }
@@ -61,7 +61,7 @@ const doImport = async (alerts) => {
   let Alert = sql.define({
     name: 'alerts',
     columns: ['fingerprint','starts_at','ends_at','created_at','updated_at','label_names','label_values',
-              'inhibited_by','silenced_by','state','payload']
+      'inhibited_by','silenced_by','state','payload']
   })
 
 
