@@ -8,6 +8,8 @@ const util = require('util');
 // logger.level = 'debug';
 
 module.exports = function () {
+  if(process.env.NODE_ENV === 'test') return () => null
+
   return context => {
     // This debugs the service call and a stringified version of the hook context
     // You can customize the message (and logger) to your needs

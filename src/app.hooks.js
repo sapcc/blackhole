@@ -41,14 +41,13 @@ const validateAuthToken = async  (context) => {
     if(expirationTime < now+60 || expirationTime > now + (60 * 60 * 2)) {
       return Promise.reject(new NotAuthenticated('Token expired or out of time range!'))
     }
-
     const apiClientData = await loadApiClientData(apiKey)
     if(!apiClientData) return Promise.reject(new NotAuthenticated('Could not find api key'))
 
     const refSignature  = crypto.createHmac('sha256', apiClientData.secret).update(timestamp).digest('base64')
     if(signature!=refSignature) return Promise.reject(new NotAuthenticated('Bad Signature'))
     delete context.params.apiClient
-    delete context.params.query.apiClient
+    if(context.params.query) delete context.params.query.apiClient
     context.params.apiClient = { ...apiClientData, secret: '' }
   } catch(e) { return Promise.reject(new NotAuthenticated(e))}
 
