@@ -35,6 +35,14 @@ app.use(compress());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(favicon(path.join(app.get('public'), 'favicon.ico')));
+
+// Enable CORS
+app.use(function(req, res, next) {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+  next();
+});
+
 // Host the public folder
 app.use('/', express.static(app.get('public')));
 app.use('/system/readiness', (req,res) => res.sendStatus(200))
