@@ -1,5 +1,4 @@
-jest.mock('../../src/app.hooks.js', () => ({}))
-jest.mock('../../src/services/clients/clients.hooks.js', () => ({}))
+require('../pg_mock')()
 
 const app = require('../../src/app');
 
