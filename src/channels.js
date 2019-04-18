@@ -14,6 +14,6 @@ module.exports = function(app) {
   // eslint-disable-next-line no-unused-vars
   app.publish((data, hook) => {
     //console.log(':::::::::::::::DATA',hook)
-    app.channel('authenticated')
+    return app.channel('authenticated')
   })
 }
