@@ -33,7 +33,7 @@ const sendToAPI = async (data) => {
 
   return new Promise((resolve) => {
     const req = http.request('http://0.0.0.0:3030',httpOptions, (res) => {
-      console.log(':::::::::::::::::::::::::::::',res.statusCode)
+      console.info(':::::::::::::::::::::::::::::',res.statusCode)
       let body = ''
       res.on('data', (d) => body += d)
       res.on('end', () => resolve(body))

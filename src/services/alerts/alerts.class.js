@@ -260,7 +260,7 @@ class Service {
    */
   // acts as UPSERT (UPDATE OR INSERT)
   // It returns allways a hash of added and updated arrays
-  async create (data, params) {
+  async create (data) {
     // prepare data to fit the database structure
     let alerts = await this.prepareData(data)
     if(!alerts || alerts.length === 0) return []
@@ -294,8 +294,10 @@ class Service {
   async createSqlQuery () {
     return pgSql.define({
       name: 'alerts',
-      columns: ['fingerprint','starts_at','ends_at','created_at','updated_at','label_names','label_values',
-      'inhibited_by','silenced_by','state','payload']
+      columns: [
+        'fingerprint','starts_at','ends_at','created_at','updated_at','label_names',
+        'label_values','inhibited_by','silenced_by','state','payload'
+      ]
     })
   }
   // convert and prepare data for 
