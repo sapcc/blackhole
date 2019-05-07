@@ -1,7 +1,8 @@
 /*eslint no-console: ["error", { allow: ["info","warn", "error"] }] */
-const moment = require('moment')
 const { Pool } = require('pg')
-const importAlerts = require('../../importers/alerts')
+const pgSql = require('sql');
+const crypto = require('crypto')
+const moment = require('moment')
 
 /**
  * @swagger
@@ -45,22 +46,6 @@ class Service {
   constructor (options) {
     this.pool = new Pool()
     this.options = options || {}
-    this.events = ['changes']
-  }
-
-  setup (){ //(app,path) {
-    this.startImporter(60)
-  }
-
-  async startImporter(intervalInSec = 60) {
-    const start = Date.now()
-    const changes = await importAlerts()
-    this.emit('changes', changes)
-
-    let timeout = start + (intervalInSec*1000) - Date.now()
-    if(timeout<0) timeout = 0
-    console.info('next update in ', timeout/1000, 'seconds')
-    setTimeout(() => this.startImporter(intervalInSec), timeout)
   }
 
   /**
@@ -220,24 +205,128 @@ class Service {
     };
   }
 
+  /**
+   * @swagger
+   * /alerts:
+   *   post:
+   *     description: Creates or updates one or a bulk of alerts.
+   *     summary: POST /alerts
+   *     tags:
+   *       - alerts
+   *     produces:
+   *       - application/json
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: array
+   *             items:
+   *               $ref: '#/components/schemas/Alert'
+   *     responses:
+   *       201:
+   *         description: Created
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 added:
+   *                   type: array
+   *                   items:
+   *                     $ref: '#/components/schemas/Alert'
+   *                 updated:
+   *                   type: array
+   *                   items:
+   *                     $ref: '#/components/schemas/Alert'
+   *
+   *         headers:
+   *           Link:
+   *             description: pagination links
+   *             schema:
+   *               type: string
+   *               example:
+   *                 '<https://blackhole-api.cloud.sap/alerts?per_page=20&page=5>; rel="next",
+   *                  <https://blackhole-api.cloud.sap/alerts?per_page=20&page=10>; rel="last",
+   *                  <https://blackhole-api.cloud.sap/alerts?per_page=20&page=1>; rel="first",
+   *                  <https://blackhole-api.cloud.sap/alerts?per_page=20&page=4>; rel="prev"'
+   *
+   *       400:
+   *         $ref: '#/components/responses/BadRequest'
+   *       401:
+   *         $ref: '#/components/responses/Unauthorized'
+   *       500:
+   *         $ref: '#/components/responses/UnexpectedError'
+   */
+  // acts as UPSERT (UPDATE OR INSERT)
+  // It returns allways a hash of added and updated arrays
   async create (data, params) {
-    if (Array.isArray(data)) {
-      return Promise.all(data.map(current => this.create(current, params)));
-    }
+    // prepare data to fit the database structure
+    let alerts = await this.prepareData(data)
+    if(!alerts || alerts.length === 0) return []
+    // create sql query and insert alerts 
+    const sql = await this.createSqlQuery()
+    const query = sql.insert(alerts).toQuery()
+    
+    query.text += ' ON CONFLICT(fingerprint,starts_at) DO UPDATE SET ends_at = excluded.ends_at, inhibited_by = excluded.inhibited_by, silenced_by = excluded.silenced_by, state = excluded.state, payload = excluded.payload, updated_at = NOW() WHERE MD5(alerts.payload::TEXT) != MD5(excluded.payload::TEXT) RETURNING *'
+      
+    const now = new Date() 
+    const res = await this.executeSqlQuery(query)
+    // sort modified alerts to added and updated based on created date
+    const result = { added: [], updated: [] }
+    res.rows.forEach( alert => {
+      // console.log(alert.created_at,now)
+      alert.created_at >= now ? result.added.push(alert.payload) : result.updated.push(alert.payload)
+    })
 
-    return data;
+    return result 
   }
-
-  async update (id, data/*, params*/) {
-    return data;
+  
+  // ######################### HELPER FUNCTIONS ######################
+  async executeSqlQuery(query) {
+    // reserve a client from the pool
+    const client = await this.pool.connect()
+    const res = await client.query(query)
+    // IMPORTANT!!! release client back to the pool
+    client.release()
+    return res
   }
-
-  async patch (id, data/*, params*/) {
-    return data;
+  async createSqlQuery () {
+    return pgSql.define({
+      name: 'alerts',
+      columns: ['fingerprint','starts_at','ends_at','created_at','updated_at','label_names','label_values',
+      'inhibited_by','silenced_by','state','payload']
+    })
   }
+  // convert and prepare data for 
+  async prepareData (data) {
+    let alerts = (typeof data === 'string') ? JSON.parse(data) : data
+    if(!Array.isArray(alerts)) alerts = [alerts]
 
-  async remove (id/*, params*/) {
-    return { id };
+    try {
+      // prepare datafor insert
+      const values = []
+      alerts.forEach(alert => {
+        if(!alert.fingerprint || !alert.startsAt) return
+        const contentHash = crypto.createHash('md5')
+        contentHash.update(JSON.stringify(alert))
+
+        values.push({
+          'fingerprint': alert.fingerprint, 
+          'starts_at': moment(alert.startsAt), 
+          'ends_at': moment(alert.endsAt), 
+          'label_names': Object.keys(alert.labels), 
+          'label_values': Object.values(alert.labels),
+          'inhibited_by': alert.status.inhibitedBy, 
+          'silenced_by': alert.status.silencedBy, 
+          'state': alert.status.state,
+          'payload': alert
+        })
+      })
+
+      //console.log('released')
+      return values
+    } catch(e) { return Promise.reject(e) } 
   }
 }
 
