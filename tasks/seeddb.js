@@ -11,10 +11,9 @@ const client = new Client({
   database: process.env.PGDATABASE
 })
 
-client.connect()
-
-
 if(clientCredentials) {
+  client.connect()
+
   for(let cred of Object.values(clientCredentials)) {
     console.info('>>>>>Create Credentials for ',cred.name)
 
@@ -26,9 +25,9 @@ if(clientCredentials) {
         if(err.code === '42P04') console.info(err.message)
         else console.error(err)
       }
-      client.end()
     })
   }
+  client.end()
 } else {
   console.info('>>>>>client credentials not found :(')
 }
