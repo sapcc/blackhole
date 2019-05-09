@@ -15,7 +15,7 @@ client.connect()
 
 
 if(clientCredentials) {
-  for(let cred of clientCredentials) {
+  for(let cred of Object.values(clientCredentials)) {
     console.info('>>>>>Create Credentials for ',cred.name)
 
     client.query({
