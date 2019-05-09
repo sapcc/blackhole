@@ -12,4 +12,4 @@ ENV PGUSER=postgres
 ENV PGPASSWORD=secret
 ENV PGDATABASE=blackhole_production
 
-CMD ["yarn production"]
+CMD ["yarn", "production"]
