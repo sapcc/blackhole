@@ -9,7 +9,7 @@ RUN yarn
 
 ENV PGHOST=postgres
 ENV PGUSER=postgres
-ENV PGPASSWORD
+ENV PGPASSWORD=secret
 ENV PGDATABASE=blackhole_production
 
 CMD ["yarn production"]
