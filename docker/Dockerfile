@@ -7,9 +7,9 @@ WORKDIR /home/app/api
 
 RUN yarn
 
-ENV PGHOST=${BLACKHOLE_POSTGRESQL_SERVICE_HOST:-postgres}
-ENV PGUSER=${POSTGRES_USER:-postgres}
-ENV PGPASSWORD=$BLACKHOLE_DB_PASSWORD
-ENV PGDATABASE=${BLACKHOLE_POSTGRES_DB:-blackhole_production}
+ENV PGHOST=postgres
+ENV PGUSER=postgres
+ENV PGPASSWORD
+ENV PGDATABASE=blackhole_production
 
 CMD ["yarn production"]
