@@ -1,5 +1,4 @@
 const alertsImporter = require('./alerts')
 
-module.exports = () => {
-  alertsImporter.run(60)
-}
+// run Importers
+alertsImporter.run(60)

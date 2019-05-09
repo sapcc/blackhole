@@ -30,11 +30,12 @@
     "dropdb": "node tasks/dropdb.js",
     "test": "yarn run eslint && NODE_ENV=test yarn run jest",
     "eslint": "eslint src/. test/. --config .eslintrc.json",
-    "dev": "nodemon src/",
+    "dev": "concurrently --kill-others-on-fail \"nodemon src/\" \"node src/importers\"",
     "start": "node src/",
     "jest": "jest",
     "jest-watch": "jest --watch",
     "migrate": "node-pg-migrate -m db/migrations",
+    "run-importers": "NODE_ENV=production PORT=80 node src/importers",
     "production": "NODE_ENV=production PORT=80 node src/"
   },
   "dependencies": {
@@ -57,6 +58,7 @@
   },
   "devDependencies": {
     "@feathersjs/cli": "^3.9.0",
+    "concurrently": "^4.1.0",
     "eslint": "^5.9.0",
     "jest": "^24.5.0",
     "nodemon": "^1.18.7",

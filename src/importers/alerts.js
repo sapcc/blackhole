@@ -31,15 +31,17 @@ const sendToAPI = async (data) => {
     }
   }
 
-  return new Promise((resolve) => {
+  return new Promise((resolve,reject) => {
     const req = http.request(`http://0.0.0.0:${process.env.NODE_ENV === 'production' ? '80' : '3030'}`,httpOptions, (res) => {
-      console.info(':::::::::::::::::::::::::::::',res.statusCode)
+      console.info('::::',res.statusCode)
       let body = ''
       res.on('data', (d) => body += d)
       res.on('end', () => resolve(body))
     })
 
-    req.on('error',(error) => console.error('::::::::::::::::::ERROR',error))
+    req.on('error',(error) => {
+      reject(error) 
+    })
     req.write(data)
     req.end()
   })
@@ -51,7 +53,7 @@ const run = async (intervallInSec) => {
   const start = Date.now()
   
   const data = await loadData(process.env.ALERTS_API_ENDPOINT)
-  let result = await sendToAPI(data).then(res => JSON.parse(res))
+  let result = await sendToAPI(data).then(res => JSON.parse(res)).catch(e => console.error(e))
   let timeout = start + (intervallInSec*1000) - Date.now()
   if(timeout<0) timeout = 0
 

@@ -1,7 +1,7 @@
 require('dotenv').config()
 const { Client } = require('pg')
-let clients 
-try { clients  = require('/clients/credentials') } catch(e) {}
+let clientCredentials
+try { clientCredentials  = require('/clients/credentials') } catch(e) {}
 
 const client = new Client({
   user: process.env.PGUSER,
@@ -14,21 +14,35 @@ const client = new Client({
 client.connect()
 
 
-if(clients) {
-  clients.forEach(client => console.info(client.name))
+if(clientCredentials) {
+  for(let cred of clientCredentials) {
+    console.info('>>>>>Create Credentials for ',cred.name)
+
+    client.query({
+      text: 'INSERT INTO clients(api_key,secret,name,permissions,status) VALUES($1,$2,$3,$4,$5) ON CONFLICT(api_key) DO UPDATE SET secret=$2, name=$3, permissions=$4, status=$5',
+      values: [cred.key,cred.secret,cred.name,cred.permissions,cred.status]
+    }, (err) => {
+      if(err) {
+        if(err.code === '42P04') console.info(err.message)
+        else console.error(err)
+      }
+      client.end()
+    })
+  }
 } else {
-  console.info('::::::::::::::::::::::clients not found :(')
+  console.info('>>>>>client credentials not found :(')
 }
 
-// CREATE ADMIN CLIENT CREDENTIALS
-client.query(`INSERT INTO clients(api_key,secret,name,permissions,status) VALUES('${process.env.ADMIN_API_KEY}','${process.env.ADMIN_API_SECRET}','Api Admin','{"api_admin"}','active') ON CONFLICT(api_key) DO UPDATE SET secret='${process.env.ADMIN_API_SECRET}'`, (err, res) => {
-  if(err) {
-    if(err.code === '42P04') {
-      console.info(err.message) 
-    } else {
-      console.log(err)
-    }
-  }
-  client.end()
-})
+
+//// CREATE ADMIN CLIENT CREDENTIALS
+//client.query(`INSERT INTO clients(api_key,secret,name,permissions,status) VALUES('${process.env.ADMIN_API_KEY}','${process.env.ADMIN_API_SECRET}','Api Admin','{"api_admin"}','active') ON CONFLICT(api_key) DO UPDATE SET secret='${process.env.ADMIN_API_SECRET}'`, (err, res) => {
+//  if(err) {
+//    if(err.code === '42P04') {
+//      console.info(err.message) 
+//    } else {
+//      console.log(err)
+//    }
+//  }
+//  client.end()
+//})
 

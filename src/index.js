@@ -12,5 +12,3 @@ server.on('listening', () =>
   logger.info('Feathers application started on http://%s:%d', app.get('host'), port)
 );
 
-// run importers
-require('./importers')()
