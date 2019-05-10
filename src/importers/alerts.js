@@ -2,7 +2,7 @@
 
 require('dotenv').config()
 const axios = require('axios')
-const authToken = require('./api_token')
+const tokenManager = require('./api_token')
 
 // load Data from api
 const loadData = async (url) => axios.get(url).then(response => response.data)
@@ -10,7 +10,7 @@ const sendToAPI = async (data) => (
   axios.post(
     `http://${process.env.BLACKHOLE_SERVICE_HOST}/alerts`,
     data,
-    {headers: { 'X-AUTH-TOKEN': authToken }}
+    {headers: { 'X-AUTH-TOKEN': tokenManager.currentToken() }}
   ).then(response => response.data)
 )
 
@@ -21,7 +21,7 @@ const startImporter = async (intervallInSec) => {
   const start = Date.now() 
   const alerts = await loadData(process.env.ALERTS_API_ENDPOINT)
     .then(data => sendToAPI(data))
-    .catch(e => console.error('::::::::::::::',e))
+    .catch(e => console.error('::::::::::::::',e.response.data))
 
   let timeout = start + (intervallInSec*1000) - Date.now()
   if(timeout<0) timeout = 0

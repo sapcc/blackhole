@@ -15,4 +15,4 @@ const generateToken = () => {
 
 generateToken()
 
-module.exports = currentAuthToken
+module.exports = { currentToken: () => currentAuthToken }
