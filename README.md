@@ -1,8 +1,8 @@
-# blackhole
+# About
 
-> Backend for Supernova
+Blackhole is an API based database, which will contain different types of data in perspective and make them available via API. Both reading and importing the data is done exclusively through the API, which is secured by using an HMAC based token.
 
-## About
+At the heart of the data are the alerts collected by a core importer.
 
 This project uses [Feathers](http://feathersjs.com). An open source web framework for building modern real-time applications.
 
@@ -10,22 +10,23 @@ This project uses [Feathers](http://feathersjs.com). An open source web framewor
 
 Getting up and running is as easy as 1, 2, 3.
 
-1. Make sure you have [NodeJS](https://nodejs.org/) and [npm](https://www.npmjs.com/) installed.
+1. Make sure you have [NodeJS](https://nodejs.org/) and [npm](https://www.npmjs.com/) installed and the .env file exists (use env.sample)
 2. Install your dependencies
 
     ```
-    cd path/to/blackhole; npm install
+    cd path/to/blackhole
+    yarn install
     ```
 
 3. Start your app
 
     ```
-    npm start
+    yarn dev
     ```
 
 ## Testing
 
-Simply run `npm test` and all your tests in the `test/` directory will be run.
+Simply run `yarn test` and all your tests in the `test/` directory will be run.
 
 ## Scaffolding
 
