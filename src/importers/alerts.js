@@ -1,64 +1,32 @@
 /*eslint no-console: ["error", { allow: ["info","warn", "error"] }] */
 
 require('dotenv').config()
-const https = require('https')
-const http = require('http')
+const axios = require('axios')
 const authToken = require('./api_token')
 
 // load Data from api
-const loadData = async (url) => {
-  return new Promise((resolve) => {
-    https.get(url, res => {
-      res.setEncoding('utf8')
-      let body = ''
-      res.on('data', data => {
-        body += data
-      })
-      res.on('end', () => resolve(body))
-    })
-  })
-}
-
-const sendToAPI = async (data) => {
-  let httpOptions = {
-    path: '/alerts?upsert=true',
-
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Content-Length': data.length,
-      'X-AUTH-TOKEN': authToken
-    }
-  }
-
-  return new Promise((resolve,reject) => {
-    const req = http.request(`http://${process.env.IMPORTER_API_ENDPOINT}`,httpOptions, (res) => {
-      console.info('::::',res.statusCode)
-      let body = ''
-      res.on('data', (d) => body += d)
-      res.on('end', () => resolve(body))
-    })
-
-    req.on('error',(error) => {
-      reject(error) 
-    })
-    req.write(data)
-    req.end()
-  })
-}
+const loadData = async (url) => axios.get(url).then(response => response.data)
+const sendToAPI = async (data) => (
+  axios.post(
+    `http://${process.env.BLACKHOLE_SERVICE_HOST}/alerts`,
+    data,
+    {headers: { 'X-AUTH-TOKEN': authToken }}
+  ).then(response => response.data)
+)
 
 const run = async (intervallInSec) => {
   console.info(':::START ALERTS IMPORTER :::', 'INTERVALL:',intervallInSec)
   
-  const start = Date.now()
-  
-  const data = await loadData(process.env.ALERTS_API_ENDPOINT)
-  let result = await sendToAPI(data).then(res => JSON.parse(res)).catch(e => console.error(e))
+  const start = Date.now() 
+  const alerts = await loadData(process.env.ALERTS_API_ENDPOINT)
+    .then(data => sendToAPI(data))
+    .catch(e => console.error(e))
+
   let timeout = start + (intervallInSec*1000) - Date.now()
   if(timeout<0) timeout = 0
 
-  if (typeof result === 'object') {
-    console.info(JSON.parse(data).length, 'alerts procceded in', (Date.now()-start), 'ms. ', 'added:', result.added.length, 'updated:', result.updated.length) 
+  if (typeof alerts === 'object') {
+    console.info(alerts.added.length+alerts.updated.length, 'alerts procceded in', (Date.now()-start), 'ms. ', 'added:', alerts.added.length, 'updated:', alerts.updated.length) 
   }
 
   console.info('next update in ', timeout/1000, 'seconds')
