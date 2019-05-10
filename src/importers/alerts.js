@@ -32,7 +32,7 @@ const sendToAPI = async (data) => {
   }
 
   return new Promise((resolve,reject) => {
-    const req = http.request(`http://0.0.0.0:${process.env.NODE_ENV === 'production' ? '80' : '3030'}`,httpOptions, (res) => {
+    const req = http.request(`http://${process.env.IMPORTER_API_ENDPOINT}`,httpOptions, (res) => {
       console.info('::::',res.statusCode)
       let body = ''
       res.on('data', (d) => body += d)
