@@ -21,7 +21,7 @@ const startImporter = async (intervallInSec) => {
   const start = Date.now() 
   const alerts = await loadData(process.env.ALERTS_API_ENDPOINT)
     .then(data => sendToAPI(data))
-  .catch(e => console.error('::::::::::::::',e))
+    .catch(e => console.error('::::::::::::::',e))
 
   let timeout = start + (intervallInSec*1000) - Date.now()
   if(timeout<0) timeout = 0
