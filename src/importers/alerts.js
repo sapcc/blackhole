@@ -14,13 +14,14 @@ const sendToAPI = async (data) => (
   ).then(response => response.data)
 )
 
-const run = async (intervallInSec) => {
+
+const start = async (intervallInSec) => {
   console.info(':::START ALERTS IMPORTER :::', 'INTERVALL:',intervallInSec)
   
   const start = Date.now() 
   const alerts = await loadData(process.env.ALERTS_API_ENDPOINT)
     .then(data => sendToAPI(data))
-    .catch(e => console.error(e))
+  //.catch(e => console.error('::::::::::::::',e))
 
   let timeout = start + (intervallInSec*1000) - Date.now()
   if(timeout<0) timeout = 0
@@ -30,7 +31,12 @@ const run = async (intervallInSec) => {
   }
 
   console.info('next update in ', timeout/1000, 'seconds')
-  setTimeout(() => run(intervallInSec), timeout)
+  setTimeout(() => start(intervallInSec), timeout)
+}
+
+const run = async (intervallInSec,immediate = true) => {
+  if(immediate) start(intervallInSec)
+  else setTimeout(() => start(intervallInSec), intervallInSec * 1000)
 }
 
 module.exports = {run}
