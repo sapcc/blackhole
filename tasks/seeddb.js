@@ -12,11 +12,11 @@ const client = new Client({
 
 if(clientCredentials) {
 
-  const queries = Object.values(clientCredentials).map( cred => 
+  const queries = Object.values(clientCredentials).map( cred => { 
     console.info('>>>>>',cred.name)
     client.query('INSERT INTO clients(api_key,secret,name,permissions,status) VALUES($1,$2,$3,$4,$5) ON CONFLICT(api_key) \
       DO UPDATE SET secret=$2, name=$3, permissions=$4, status=$5',[cred.key,cred.secret,cred.name,cred.permissions,cred.status])
-  )
+  })
 
   client.connect()
   Promise.all(queries).then(() => client.end()).catch(err => {
