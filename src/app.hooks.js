@@ -15,7 +15,6 @@ const loadApiClientData = async (apiKey) => {
     const client = await pool.connect()
     const res = await client.query({text: 'SELECT * FROM clients WHERE api_key = $1::text', values: [apiKey]})
     client.release()
-    console.log('..................',apiClients)
     apiClients[apiKey] = res.rows[0]
     return apiClients[apiKey]
   } catch(e) { 
