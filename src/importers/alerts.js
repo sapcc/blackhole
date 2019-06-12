@@ -6,9 +6,11 @@ const tokenManager = require('./api_token')
 
 // load Data from api
 const loadData = async (url) => axios.get(url).then(response => response.data)
+const API_ENDPOINT = 'http://' + (process.env.BLACKHOLE_SERVICE_HOST || 'localhost:3030') + '/alerts'
+
 const sendToAPI = async (data) => (
   axios.post(
-    `http://${process.env.BLACKHOLE_SERVICE_HOST}/alerts`,
+    API_ENDPOINT,
     data,
     {headers: { 'X-AUTH-TOKEN': tokenManager.currentToken() }}
   ).then(response => response.data)
@@ -21,7 +23,7 @@ const startImporter = async (intervallInSec) => {
   const start = Date.now() 
   const alerts = await loadData(process.env.ALERTS_API_ENDPOINT)
     .then(data => sendToAPI(data))
-    .catch(e => console.error('::::::::::::::',e.response.data))
+    .catch(e => console.error('::::::::::::::',e))
 
   let timeout = start + (intervallInSec*1000) - Date.now()
   if(timeout<0) timeout = 0
@@ -31,7 +33,7 @@ const startImporter = async (intervallInSec) => {
   }
 
   console.info('next update in ', timeout/1000, 'seconds')
-  setTimeout(() => startImporter(intervallInSec), timeout)
+  setTimeout(() => startImporter(intervallInSec).catch(e => console.error(e)), timeout)
 }
 
 const run = async (intervallInSec,immediate = true) => {
